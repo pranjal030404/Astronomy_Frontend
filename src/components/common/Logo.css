@@ -1,0 +1,33 @@
+@keyframes twinkle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { filter: drop-shadow(0 0 2px rgba(139, 92, 246, 0.5)); }
+  50% { filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.8)); }
+}
+
+.logo-animation {
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+.logo-circle {
+  transform-origin: center;
+  animation: rotate 60s linear infinite;
+}
+
+.star {
+  animation: twinkle 2s ease-in-out infinite;
+}
+
+.star-1 { animation-delay: 0s; }
+.star-2 { animation-delay: 0.4s; }
+.star-3 { animation-delay: 0.8s; }
+.star-4 { animation-delay: 1.2s; }
+.star-5 { animation-delay: 1.6s; }

@@ -1,0 +1,90 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-space-900 text-white antialiased;
+  }
+  
+  * {
+    @apply border-space-600;
+  }
+}
+
+@layer components {
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    @apply w-2;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-space-800;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-space-600 rounded-full;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-space-500;
+  }
+
+  /* Button styles */
+  .btn-primary {
+    @apply px-6 py-3 bg-nebula-purple hover:bg-purple-600 text-white font-semibold rounded-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-nebula-purple focus:ring-offset-2 focus:ring-offset-space-900;
+  }
+
+  .btn-secondary {
+    @apply px-6 py-3 bg-space-600 hover:bg-space-500 text-white font-semibold rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-space-500;
+  }
+
+  .btn-outline {
+    @apply px-6 py-3 border-2 border-nebula-purple text-nebula-purple hover:bg-nebula-purple hover:text-white font-semibold rounded-lg transition-all duration-200 focus:outline-none;
+  }
+
+  /* Input styles */
+  .input-field {
+    @apply w-full px-4 py-3 bg-space-800 border border-space-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-nebula-purple focus:border-transparent transition-all;
+  }
+
+  /* Card styles */
+  .card {
+    @apply bg-space-800 rounded-xl border border-space-600 p-6 shadow-lg;
+  }
+
+  .card-hover {
+    @apply card hover:border-nebula-purple transition-all duration-300 cursor-pointer;
+  }
+
+  /* Starfield background */
+  .starfield-bg {
+    background-image: 
+      radial-gradient(2px 2px at 20% 30%, white, transparent),
+      radial-gradient(2px 2px at 60% 70%, white, transparent),
+      radial-gradient(1px 1px at 50% 50%, white, transparent),
+      radial-gradient(1px 1px at 80% 10%, white, transparent),
+      radial-gradient(2px 2px at 90% 60%, white, transparent),
+      radial-gradient(1px 1px at 33% 82%, white, transparent),
+      radial-gradient(2px 2px at 27% 75%, white, transparent);
+    background-size: 200% 200%;
+    animation: twinkle 3s ease-in-out infinite;
+  }
+
+  /* Glass morphism effect */
+  .glass {
+    @apply bg-space-800/50 backdrop-blur-md border border-space-600/50;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-nebula-purple via-nebula-pink to-nebula-blue;
+  }
+
+  .glow-text {
+    text-shadow: 0 0 10px rgba(139, 92, 246, 0.8),
+                 0 0 20px rgba(139, 92, 246, 0.5),
+                 0 0 30px rgba(139, 92, 246, 0.3);
+  }
+}
