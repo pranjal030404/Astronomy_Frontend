@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Heart, MoreVertical, Trash2, Edit2 } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { commentAPI } from '../../services/api';
-import { toast } from 'react-toastify';
+import { useNotification } from '../../context/NotificationContext';
 import { formatDistanceToNow } from 'date-fns';
 import { Link } from 'react-router-dom';
 import useAuthStore from '../../store/authStore';
@@ -15,6 +15,7 @@ const CommentItem = ({ comment, postId }) => {
   const [replyContent, setReplyContent] = useState('');
   const { user: currentUser } = useAuthStore();
   const queryClient = useQueryClient();
+  const notify = useNotification();
 
   const isOwner = currentUser?._id === comment.author?._id;
   const isLiked = comment.likes?.includes(currentUser?._id);
@@ -29,7 +30,7 @@ const CommentItem = ({ comment, postId }) => {
   const updateMutation = useMutation({
     mutationFn: (content) => commentAPI.updateComment(comment._id, { content }),
     onSuccess: () => {
-      toast.success('Comment updated');
+      notify.success('Comment updated');
       setIsEditing(false);
       queryClient.invalidateQueries(['comments', postId]);
     },
@@ -38,7 +39,7 @@ const CommentItem = ({ comment, postId }) => {
   const deleteMutation = useMutation({
     mutationFn: () => commentAPI.deleteComment(comment._id),
     onSuccess: () => {
-      toast.success('Comment deleted');
+      notify.success('Comment deleted');
       queryClient.invalidateQueries(['comments', postId]);
     },
   });
@@ -46,7 +47,7 @@ const CommentItem = ({ comment, postId }) => {
   const replyMutation = useMutation({
     mutationFn: (content) => commentAPI.createComment(postId, { content, parentComment: comment._id }),
     onSuccess: () => {
-      toast.success('Reply added');
+      notify.success('Reply added');
       setReplyContent('');
       setShowReplies(true);
       queryClient.invalidateQueries(['comments', postId]);
@@ -78,7 +79,7 @@ const CommentItem = ({ comment, postId }) => {
       </Link>
 
       <div className="flex-1">
-        <div className="bg-space-700 rounded-lg p-3">
+        <div className="bg-space-700/30 backdrop-blur-sm rounded-lg p-3">
           <div className="flex items-start justify-between mb-1">
             <div>
               <Link
@@ -95,20 +96,20 @@ const CommentItem = ({ comment, postId }) => {
 
             {isOwner && (
               <div className="relative group">
-                <button className="p-1 hover:bg-space-600 rounded transition-colors">
+                <button className="p-1 hover:bg-space-600/50 rounded transition-colors">
                   <MoreVertical size={14} />
                 </button>
-                <div className="absolute right-0 mt-1 bg-space-800 border border-space-600 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 min-w-[120px]">
+                <div className="absolute right-0 mt-1 bg-space-800/80 backdrop-blur-xl border border-space-600/30 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 min-w-[120px]">
                   <button
                     onClick={() => setIsEditing(true)}
-                    className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-space-700 transition-colors"
+                    className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-space-700/50 transition-colors"
                   >
                     <Edit2 size={14} />
                     Edit
                   </button>
                   <button
                     onClick={() => deleteMutation.mutate()}
-                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-400 hover:bg-space-700 transition-colors"
+                    className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-400 hover:bg-space-700/50 transition-colors"
                   >
                     <Trash2 size={14} />
                     Delete
@@ -123,7 +124,7 @@ const CommentItem = ({ comment, postId }) => {
               <textarea
                 value={editedContent}
                 onChange={(e) => setEditedContent(e.target.value)}
-                className="w-full px-3 py-2 bg-space-800 border border-space-600 rounded text-sm focus:outline-none focus:ring-2 focus:ring-nebula-purple"
+                className="w-full px-3 py-2 bg-space-800/30 backdrop-blur-sm border border-space-600/30 rounded text-sm focus:outline-none focus:ring-2 focus:ring-nebula-purple/50"
                 rows={2}
               />
               <div className="flex gap-2">
@@ -133,7 +134,7 @@ const CommentItem = ({ comment, postId }) => {
                 <button
                   type="button"
                   onClick={() => setIsEditing(false)}
-                  className="text-xs px-3 py-1 bg-space-600 rounded hover:bg-space-500"
+                  className="text-xs px-3 py-1 bg-space-600/50 rounded hover:bg-space-500/60"
                 >
                   Cancel
                 </button>
@@ -181,7 +182,7 @@ const CommentItem = ({ comment, postId }) => {
                 value={replyContent}
                 onChange={(e) => setReplyContent(e.target.value)}
                 placeholder="Write a reply..."
-                className="flex-1 px-3 py-2 bg-space-800 border border-space-600 rounded text-sm focus:outline-none focus:ring-2 focus:ring-nebula-purple"
+                className="flex-1 px-3 py-2 bg-space-800/30 backdrop-blur-sm border border-space-600/30 rounded text-sm focus:outline-none focus:ring-2 focus:ring-nebula-purple/50"
               />
               <button
                 type="submit"

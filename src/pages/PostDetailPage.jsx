@@ -5,7 +5,7 @@ import { postAPI } from '../services/api';
 import { Loader, ArrowLeft, Star, Heart, Share2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import CommentSection from '../components/comments/CommentSection';
-import { toast } from 'react-toastify';
+import { useNotification } from '../context/NotificationContext';
 import useAuthStore from '../store/authStore';
 import { getAvatarUrl } from '../utils/helpers';
 
@@ -13,6 +13,7 @@ const PostDetailPage = () => {
   const { id: postId } = useParams();
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
+  const notify = useNotification();
 
   const { data: postData, isLoading } = useQuery({
     queryKey: ['posts', postId],
@@ -28,7 +29,7 @@ const PostDetailPage = () => {
       queryClient.invalidateQueries(['posts', postId]);
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || 'Failed to like post');
+      notify.error(error.response?.data?.message || 'Failed to like post');
     },
   });
 
@@ -67,7 +68,7 @@ const PostDetailPage = () => {
             <img
               src={getAvatarUrl(post.author)}
               alt={post.author?.username}
-              className="w-12 h-12 rounded-full border-2 border-nebula-purple"
+              className="w-12 h-12 rounded-full border-2 border-nebula-purple/70"
             />
           </Link>
           <div className="flex-1">
@@ -107,7 +108,7 @@ const PostDetailPage = () => {
 
         {/* Astronomy Data */}
         {post.astronomyData?.objectName && (
-          <div className="mb-6 p-4 bg-space-700 rounded-lg border border-space-600">
+          <div className="mb-6 p-4 bg-space-700/30 rounded-lg border border-space-600/30">
             <div className="flex items-start gap-3">
               <Star size={24} className="text-nebula-purple mt-0.5" />
               <div className="flex-1">
@@ -140,7 +141,7 @@ const PostDetailPage = () => {
             {post.tags.map((tag, index) => (
               <span
                 key={index}
-                className="px-3 py-1 bg-space-700 text-nebula-purple rounded-full"
+                className="px-3 py-1 bg-space-700/40 text-nebula-purple rounded-full"
               >
                 #{tag}
               </span>
@@ -149,7 +150,7 @@ const PostDetailPage = () => {
         )}
 
         {/* Actions Bar */}
-        <div className="flex items-center gap-6 py-4 border-t border-b border-space-600 mb-6">
+        <div className="flex items-center gap-6 py-4 border-t border-b border-space-600/30 mb-6">
           <button
             onClick={() => likeMutation.mutate()}
             disabled={likeMutation.isPending}

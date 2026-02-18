@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
+import { useNotification } from '../../context/NotificationContext';
 import { Mail, Lock, Eye, EyeOff, Loader } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 
@@ -13,6 +13,7 @@ const LoginPage = () => {
   
   const { login, isLoading } = useAuthStore();
   const navigate = useNavigate();
+  const notify = useNotification();
 
   const handleChange = (e) => {
     setFormData({
@@ -27,10 +28,10 @@ const LoginPage = () => {
     const result = await login(formData);
     
     if (result.success) {
-      toast.success('Welcome back to Astronomy Lover! 🌌');
+      notify.success('Welcome back to Astronomy Lover! 🌌');
       navigate('/');
     } else {
-      toast.error(result.message || 'Login failed. Please try again.');
+      notify.error(result.message || 'Login failed. Please try again.');
     }
   };
 
@@ -135,7 +136,7 @@ const LoginPage = () => {
               <div className="w-full border-t border-space-600"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-space-800 text-gray-400">
+              <span className="px-2 bg-space-800/50 text-gray-400">
                 New to Astronomy Lover?
               </span>
             </div>

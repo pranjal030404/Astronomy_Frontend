@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { NotificationProvider } from './context/NotificationContext';
 
 import useAuthStore from './store/authStore';
+import StarField from './components/common/StarField';
 
 // Layout
 import Navbar from './components/layout/Navbar';
@@ -33,7 +33,8 @@ const queryClient = new QueryClient({
     queries: {
       refetchOnWindowFocus: false,
       retry: 1,
-      staleTime: 5 * 60 * 1000, // 5 minutes
+      staleTime: 30 * 1000, // 30 seconds
+      cacheTime: 5 * 60 * 1000, // 5 minutes
     },
   },
 });
@@ -69,29 +70,41 @@ const PublicOnlyRoute = ({ children }) => {
 };
 
 function App() {
-  const { fetchUser, clearAuth, isAuthenticated, isLoading } = useAuthStore();
-  const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
+  const { fetchUser, clearAuth } = useAuthStore();
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    // Only check authentication once on mount
-    if (!hasCheckedAuth) {
+    let isMounted = true;
+    
+    const initAuth = async () => {
       const token = localStorage.getItem('token');
+      
       if (token) {
-        // If token exists, verify it's valid
-        fetchUser();
-      } else {
-        // If no token, ensure auth state is cleared
-        clearAuth();
+        // Validate token and fetch fresh user data
+        const result = await fetchUser();
+        if (!result?.success) {
+          // Token is invalid, clear auth
+          clearAuth();
+        }
       }
-      setHasCheckedAuth(true);
-    }
+      
+      if (isMounted) {
+        setIsInitialized(true);
+      }
+    };
+    
+    initAuth();
+    
+    return () => {
+      isMounted = false;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Empty deps to run only once
+  }, []); // Run once on mount
 
-  // Show loading spinner while checking authentication
-  if (isLoading && !hasCheckedAuth) {
+  // Show loading spinner while initializing
+  if (!isInitialized) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-space-900">
+      <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-nebula-purple"></div>
       </div>
     );
@@ -99,108 +112,97 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-        <div className="flex flex-col min-h-screen bg-space-900 text-white">
-          <Navbar />
-          
-          <main className="flex-grow">
-            <Routes>
-              {/* Public routes */}
-              <Route path="/login" element={
-                <PublicOnlyRoute>
-                  <LoginPage />
-                </PublicOnlyRoute>
-              } />
-              <Route path="/register" element={
-                <PublicOnlyRoute>
-                  <RegisterPage />
-                </PublicOnlyRoute>
-              } />
+      <NotificationProvider>
+        <StarField />
+        <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <div className="flex flex-col min-h-screen text-white">
+            <Navbar />
+            
+            <main className="flex-grow">
+              <Routes>
+                {/* Public routes */}
+                <Route path="/login" element={
+                  <PublicOnlyRoute>
+                    <LoginPage />
+                  </PublicOnlyRoute>
+                } />
+                <Route path="/register" element={
+                  <PublicOnlyRoute>
+                    <RegisterPage />
+                  </PublicOnlyRoute>
+                } />
 
-              {/* Protected routes */}
-              <Route path="/" element={
-                <ProtectedRoute>
-                  <HomePage />
-                </ProtectedRoute>
-              } />
-              <Route path="/explore" element={
-                <ProtectedRoute>
-                  <ExplorePage />
-                </ProtectedRoute>
-              } />
-              <Route path="/communities" element={
-                <ProtectedRoute>
-                  <CommunitiesPage />
-                </ProtectedRoute>
-              } />
-              <Route path="/communities/create" element={
-                <ProtectedRoute>
-                  <CreateCommunityPage />
-                </ProtectedRoute>
-              } />
-              <Route path="/communities/:id" element={
-                <ProtectedRoute>
-                  <CommunityDetailPage />
-                </ProtectedRoute>
-              } />
-              <Route path="/profile/:username" element={
-                <ProtectedRoute>
-                  <ProfilePage />
-                </ProtectedRoute>
-              } />
-              <Route path="/posts/:id" element={
-                <ProtectedRoute>
-                  <PostDetailPage />
-                </ProtectedRoute>
-              } />
-              <Route path="/calendar" element={
-                <ProtectedRoute>
-                  <CalendarPage />
-                </ProtectedRoute>
-              } />
-              <Route path="/calendar/create" element={
-                <ProtectedRoute>
-                  <CreateEventPage />
-                </ProtectedRoute>
-              } />
-              <Route path="/settings" element={
-                <ProtectedRoute>
-                  <SettingsPage />
-                </ProtectedRoute>
-              } />
-              <Route path="/shop" element={
-                <ProtectedRoute>
-                  <ShopPage />
-                </ProtectedRoute>
-              } />
-              <Route path="/admin" element={
-                <ProtectedRoute>
-                  <AdminPage />
-                </ProtectedRoute>
-              } />
+                {/* Protected routes */}
+                <Route path="/" element={
+                  <ProtectedRoute>
+                    <HomePage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/explore" element={
+                  <ProtectedRoute>
+                    <ExplorePage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/communities" element={
+                  <ProtectedRoute>
+                    <CommunitiesPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/communities/create" element={
+                  <ProtectedRoute>
+                    <CreateCommunityPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/communities/:id" element={
+                  <ProtectedRoute>
+                    <CommunityDetailPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/profile/:username" element={
+                  <ProtectedRoute>
+                    <ProfilePage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/posts/:id" element={
+                  <ProtectedRoute>
+                    <PostDetailPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/calendar" element={
+                  <ProtectedRoute>
+                    <CalendarPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/calendar/create" element={
+                  <ProtectedRoute>
+                    <CreateEventPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/settings" element={
+                  <ProtectedRoute>
+                    <SettingsPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/shop" element={
+                  <ProtectedRoute>
+                    <ShopPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin" element={
+                  <ProtectedRoute>
+                    <AdminPage />
+                  </ProtectedRoute>
+                } />
 
-              {/* 404 */}
-              <Route path="*" element={<NotFoundPage />} />
-            </Routes>
-          </main>
+                {/* 404 */}
+                <Route path="*" element={<NotFoundPage />} />
+              </Routes>
+            </main>
 
-          <Footer />
-        </div>
-
-        {/* Toast notifications */}
-        <ToastContainer
-          position="top-right"
-          autoClose={3000}
-          hideProgressBar={false}
-          newestOnTop
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          theme="dark"
-        />
-      </Router>
+            <Footer />
+          </div>
+        </Router>
+      </NotificationProvider>
     </QueryClientProvider>
   );
 }

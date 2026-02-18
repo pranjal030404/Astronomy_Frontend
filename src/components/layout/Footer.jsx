@@ -7,7 +7,7 @@ const Footer = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-space-800 border-t border-space-600 mt-auto">
+    <footer className="bg-space-900/40 border-t border-space-600/30 mt-auto backdrop-blur-xl">
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
@@ -105,7 +105,7 @@ const Footer = () => {
                 href="https://github.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-2 bg-space-700 hover:bg-space-600 rounded-lg transition-colors"
+                className="p-2 bg-space-700/40 hover:bg-space-600/50 rounded-lg transition-colors"
                 aria-label="GitHub"
               >
                 <Github size={20} />
@@ -114,14 +114,14 @@ const Footer = () => {
                 href="https://twitter.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-2 bg-space-700 hover:bg-space-600 rounded-lg transition-colors"
+                className="p-2 bg-space-700/40 hover:bg-space-600/50 rounded-lg transition-colors"
                 aria-label="Twitter"
               >
                 <Twitter size={20} />
               </a>
               <a
                 href="mailto:support@astronomylover.com"
-                className="p-2 bg-space-700 hover:bg-space-600 rounded-lg transition-colors"
+                className="p-2 bg-space-700/40 hover:bg-space-600/50 rounded-lg transition-colors"
                 aria-label="Email"
               >
                 <Mail size={20} />
@@ -134,7 +134,7 @@ const Footer = () => {
         </div>
 
         {/* Bottom Bar */}
-        <div className="mt-8 pt-8 border-t border-space-600 flex flex-col md:flex-row justify-between items-center text-sm text-gray-400">
+        <div className="mt-8 pt-8 border-t border-space-600/30 flex flex-col md:flex-row justify-between items-center text-sm text-gray-400">
           <p>
             © {currentYear} Astronomy Lover. All rights reserved.
           </p>

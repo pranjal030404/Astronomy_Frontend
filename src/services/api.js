@@ -28,8 +28,15 @@ API.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
+    // Don't try to refresh token for auth endpoints themselves
+    const authEndpoints = ['/auth/login', '/auth/register', '/auth/refresh-token'];
+    const isAuthEndpoint = authEndpoints.some(endpoint => 
+      originalRequest.url?.includes(endpoint)
+    );
+
     // Only try to refresh on 401, not on other errors like 500
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Skip refresh for auth endpoints to prevent infinite loops
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
       originalRequest._retry = true;
 
       try {
@@ -74,11 +81,13 @@ export const authAPI = {
 // User API calls
 export const userAPI = {
   getProfile: (userId) => API.get(`/users/${userId}`),
+  getUserProfile: (username) => API.get(`/users/${username}`),
   followUser: (userId) => API.post(`/users/${userId}/follow`),
   unfollowUser: (userId) => API.delete(`/users/${userId}/follow`),
   getFollowers: (userId) => API.get(`/users/${userId}/followers`),
   getFollowing: (userId) => API.get(`/users/${userId}/following`),
   searchUsers: (query) => API.get(`/users/search?q=${query}`),
+  getSuggestedUsers: (limit = 5) => API.get(`/users/suggested?limit=${limit}`),
   updateProfilePicture: (formData) => API.put('/users/profile-picture', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   }),
@@ -127,6 +136,11 @@ export const feedAPI = {
   getFeed: (params) => API.get('/feed', { params }),
 };
 
+// Stats API calls
+export const statsAPI = {
+  getStats: () => API.get('/stats'),
+};
+
 // Shop API calls
 export const shopAPI = {
   getItems: (params) => API.get('/shop', { params }),
@@ -143,8 +157,15 @@ export const shopAPI = {
 // Celestial Events API calls
 export const eventAPI = {
   getUpcomingEvents: (limit = 10) => API.get(`/events/upcoming?limit=${limit}`),
+  getAllEvents: (params) => API.get('/events', { params }),
   getEvent: (eventId) => API.get(`/events/${eventId}`),
   getEventsInRange: (startDate, endDate) => API.get(`/events/range?start=${startDate}&end=${endDate}`),
+  createEvent: (data) => API.post('/events', data),
+  updateEvent: (eventId, data) => API.put(`/events/${eventId}`, data),
+  deleteEvent: (eventId) => API.delete(`/events/${eventId}`),
+  getPendingEvents: () => API.get('/events/admin/pending'),
+  approveEvent: (eventId) => API.put(`/events/${eventId}/approve`),
+  rejectEvent: (eventId, reason) => API.put(`/events/${eventId}/reject`, { reason }),
 };
 
 export default API;

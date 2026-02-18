@@ -11,6 +11,16 @@ export default defineConfig({
         target: 'http://localhost:5000',
         changeOrigin: true,
       },
+      '/uploads': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+      },
     },
+    hmr: {
+      overlay: true,
+    },
+  },
+  optimizeDeps: {
+    exclude: ['lucide-react'],
   },
 })

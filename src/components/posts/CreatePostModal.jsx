@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { X, Upload, Image as ImageIcon, Loader, Sparkles } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { postAPI } from '../../services/api';
-import { toast } from 'react-toastify';
+import { useNotification } from '../../context/NotificationContext';
 
 const CreatePostModal = ({ isOpen, onClose }) => {
   const [content, setContent] = useState('');
@@ -16,11 +16,12 @@ const CreatePostModal = ({ isOpen, onClose }) => {
   const [tags, setTags] = useState('');
 
   const queryClient = useQueryClient();
+  const notify = useNotification();
 
   const createPostMutation = useMutation({
     mutationFn: (formData) => postAPI.createPost(formData),
     onSuccess: () => {
-      toast.success('Post created successfully! 🌟');
+      notify.success('Post created successfully!');
       queryClient.invalidateQueries(['feed']);
       queryClient.invalidateQueries(['posts']);
       resetForm();
@@ -30,13 +31,17 @@ const CreatePostModal = ({ isOpen, onClose }) => {
       const status = error.response?.status;
       const message = error.response?.data?.message;
       
-      if (status === 503) {
-        // Cloudinary not configured
-        toast.error(message || 'Image uploads are currently unavailable. Try a text-only post!', {
-          autoClose: 5000,
-        });
+      console.error('Post creation error:', error.response || error);
+      
+      if (status === 401) {
+        notify.error('Your session has expired. Please log in again.');
+        setTimeout(() => window.location.href = '/login', 2000);
+      } else if (status === 503) {
+        notify.error(message || 'Image uploads are currently unavailable. Try a text-only post!');
+      } else if (status === 500) {
+        notify.error('Server error. Try a text-only post or check your connection.');
       } else {
-        toast.error(message || 'Failed to create post');
+        notify.error(message || 'Failed to create post');
       }
     },
   });
@@ -45,7 +50,7 @@ const CreatePostModal = ({ isOpen, onClose }) => {
     const files = Array.from(e.target.files);
     
     if (files.length + images.length > 10) {
-      toast.error('Maximum 10 images allowed');
+      notify.error('Maximum 10 images allowed');
       return;
     }
 
@@ -71,16 +76,24 @@ const CreatePostModal = ({ isOpen, onClose }) => {
     e.preventDefault();
 
     if (!content && images.length === 0) {
-      toast.error('Please add content or images');
+      notify.error('Please add content or images');
+      return;
+    }
+
+    if (!content.trim() && images.length === 0) {
+      notify.error('Please add some text content or images');
       return;
     }
 
     const formData = new FormData();
     formData.append('content', content);
     
-    images.forEach(image => {
-      formData.append('images', image);
-    });
+    // Only append images if they exist
+    if (images.length > 0) {
+      images.forEach(image => {
+        formData.append('images', image);
+      });
+    }
 
     if (astronomyData.objectName) {
       formData.append('astronomyData', JSON.stringify(astronomyData));
@@ -105,17 +118,17 @@ const CreatePostModal = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-      <div className="bg-space-800 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-space-600">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-space-800/80 backdrop-blur-xl rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-space-600/30 shadow-2xl">
         {/* Header */}
-        <div className="sticky top-0 bg-space-800 border-b border-space-600 px-6 py-4 flex items-center justify-between z-10">
+        <div className="sticky top-0 bg-space-800/90 backdrop-blur-xl border-b border-space-600/30 px-6 py-4 flex items-center justify-between z-10">
           <h2 className="text-xl font-semibold flex items-center gap-2">
             <Sparkles className="text-nebula-purple" size={24} />
             Create Post
           </h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-space-700 rounded-lg transition-colors"
+            className="p-2 hover:bg-space-700/50 rounded-lg transition-colors"
           >
             <X size={24} />
           </button>
@@ -142,7 +155,15 @@ const CreatePostModal = ({ isOpen, onClose }) => {
             <label className="block text-sm font-medium mb-2">
               Images (Max 10)
             </label>
-            <div className="border-2 border-dashed border-space-600 rounded-lg p-6 text-center hover:border-nebula-purple transition-colors">
+            
+            {/* Help text */}
+            <div className="mb-3 p-3 bg-blue-900/10 border border-blue-500/30 rounded-lg text-sm backdrop-blur-sm">
+              <p className="text-blue-300">
+                💡 <strong>Tip:</strong> You can create posts with or without images. Images are stored locally on the server.
+              </p>
+            </div>
+            
+            <div className="border-2 border-dashed border-space-600/40 rounded-lg p-6 text-center hover:border-nebula-purple/50 transition-colors">
               <input
                 type="file"
                 accept="image/*"

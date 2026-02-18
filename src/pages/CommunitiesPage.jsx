@@ -1,8 +1,17 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Users, Plus, TrendingUp, Star } from 'lucide-react';
+import { Users, Plus, TrendingUp, Star, Loader } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { statsAPI } from '../services/api';
 
 const CommunitiesPage = () => {
+  const { data: statsData, isLoading } = useQuery({
+    queryKey: ['stats'],
+    queryFn: () => statsAPI.getStats(),
+  });
+
+  const stats = statsData?.data?.data || {};
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex items-center justify-between mb-8">
@@ -20,18 +29,42 @@ const CommunitiesPage = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="card text-center">
           <div className="text-3xl mb-2">🌌</div>
-          <div className="text-2xl font-bold mb-1">15+</div>
-          <div className="text-sm text-gray-400">Active Communities</div>
+          {isLoading ? (
+            <div className="flex justify-center">
+              <Loader className="animate-spin text-nebula-purple" size={24} />
+            </div>
+          ) : (
+            <>
+              <div className="text-2xl font-bold mb-1">{stats.communities || 0}+</div>
+              <div className="text-sm text-gray-400">Active Communities</div>
+            </>
+          )}
         </div>
         <div className="card text-center">
           <div className="text-3xl mb-2">👥</div>
-          <div className="text-2xl font-bold mb-1">1,200+</div>
-          <div className="text-sm text-gray-400">Total Members</div>
+          {isLoading ? (
+            <div className="flex justify-center">
+              <Loader className="animate-spin text-nebula-purple" size={24} />
+            </div>
+          ) : (
+            <>
+              <div className="text-2xl font-bold mb-1">{stats.totalMembers || 0}+</div>
+              <div className="text-sm text-gray-400">Total Members</div>
+            </>
+          )}
         </div>
         <div className="card text-center">
           <div className="text-3xl mb-2">📸</div>
-          <div className="text-2xl font-bold mb-1">5,000+</div>
-          <div className="text-sm text-gray-400">Shared Images</div>
+          {isLoading ? (
+            <div className="flex justify-center">
+              <Loader className="animate-spin text-nebula-purple" size={24} />
+            </div>
+          ) : (
+            <>
+              <div className="text-2xl font-bold mb-1">{stats.totalImages || 0}+</div>
+              <div className="text-sm text-gray-400">Shared Images</div>
+            </>
+          )}
         </div>
       </div>
 
@@ -51,7 +84,7 @@ const CommunitiesPage = () => {
           ].map((category) => (
             <button
               key={category.name}
-              className="card hover:border-nebula-purple transition-all p-4 text-center"
+              className="card hover:border-nebula-purple/50 transition-all p-4 text-center"
             >
               <div className="text-2xl mb-2">{category.icon}</div>
               <div className="text-sm font-medium">{category.name}</div>

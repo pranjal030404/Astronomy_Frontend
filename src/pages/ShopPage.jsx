@@ -1,13 +1,18 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { ShoppingCart, Star, Filter, Search, Heart } from 'lucide-react';
-import { toast } from 'react-toastify';
+import { ShoppingCart, Star, Filter, Search, Heart, Plus } from 'lucide-react';
+import { useNotification } from '../context/NotificationContext';
 import { shopAPI } from '../services/api';
+import useAuthStore from '../store/authStore';
+import CreateShopItemModal from '../components/shop/CreateShopItemModal';
 
 const ShopPage = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [cart, setCart] = useState([]);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const { user } = useAuthStore();
+  const notify = useNotification();
 
   // Fetch shop items
   const { data: shopData, isLoading } = useQuery({
@@ -38,11 +43,11 @@ const ShopPage = () => {
 
   const addToCart = (product) => {
     setCart([...cart, product]);
-    toast.success(`${product.name} added to cart! 🛒`);
+    notify.success(`${product.name} added to cart! 🛒`);
   };
 
   const addToWishlist = (product) => {
-    toast.success(`${product.name} added to wishlist! ❤️`);
+    notify.success(`${product.name} added to wishlist! ❤️`);
   };
 
   return (
@@ -67,20 +72,32 @@ const ShopPage = () => {
             placeholder="Search products..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 bg-space-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-nebula-purple"
+            className="w-full pl-10 pr-4 py-3 bg-space-800/30 backdrop-blur-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-nebula-purple/50 border border-space-600/30"
           />
         </div>
 
-        {/* Cart Button */}
-        <button className="btn-primary flex items-center gap-2 relative">
-          <ShoppingCart size={20} />
-          <span>Cart</span>
-          {cart.length > 0 && (
-            <span className="absolute -top-2 -right-2 bg-nebula-pink text-white text-xs rounded-full w-6 h-6 flex items-center justify-center">
-              {cart.length}
-            </span>
+        {/* Action Buttons */}
+        <div className="flex gap-3">
+          {user?.role === 'admin' && (
+            <button
+              onClick={() => setIsCreateModalOpen(true)}
+              className="btn-primary flex items-center gap-2"
+            >
+              <Plus size={20} />
+              Add Product
+            </button>
           )}
-        </button>
+          
+          <button className="btn-primary flex items-center gap-2 relative">
+            <ShoppingCart size={20} />
+            <span>Cart</span>
+            {cart.length > 0 && (
+              <span className="absolute -top-2 -right-2 bg-nebula-pink text-white text-xs rounded-full w-6 h-6 flex items-center justify-center">
+                {cart.length}
+              </span>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Categories */}
@@ -97,7 +114,7 @@ const ShopPage = () => {
               className={`px-4 py-2 rounded-lg transition-colors ${
                 selectedCategory === category.id
                   ? 'bg-gradient-to-r from-nebula-purple to-nebula-pink text-white'
-                  : 'bg-space-800 hover:bg-space-700 text-gray-300'
+                  : 'bg-space-800/30 hover:bg-space-700/40 text-gray-300 border border-space-600/20'
               }`}
             >
               {category.name}
@@ -207,6 +224,12 @@ const ShopPage = () => {
           <p className="text-gray-400 text-sm">24/7 customer assistance</p>
         </div>
       </div>
+
+      {/* Create Shop Item Modal */}
+      <CreateShopItemModal 
+        isOpen={isCreateModalOpen} 
+        onClose={() => setIsCreateModalOpen(false)} 
+      />
     </div>
   );
 };

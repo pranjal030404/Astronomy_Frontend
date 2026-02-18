@@ -5,28 +5,32 @@ import { userAPI, postAPI } from '../services/api';
 import { Loader, UserPlus, UserMinus, Settings, MapPin, Calendar, Star } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import PostGrid from '../components/posts/PostGrid';
+import EditProfileModal from '../components/profile/EditProfileModal';
 import useAuthStore from '../store/authStore';
-import { toast } from 'react-toastify';
+import { useNotification } from '../context/NotificationContext';
 import { getAvatarUrl } from '../utils/helpers';
 
 const ProfilePage = () => {
   const { username } = useParams();
   const { user: currentUser } = useAuthStore();
   const [activeTab, setActiveTab] = useState('posts');
+  const [showEditModal, setShowEditModal] = useState(false);
   const queryClient = useQueryClient();
+  const notify = useNotification();
 
   const { data: profileData, isLoading: profileLoading } = useQuery({
     queryKey: ['profile', username],
     queryFn: () => userAPI.getUserProfile(username),
   });
 
+  const profile = profileData?.data?.data;
+
   const { data: postsData, isLoading: postsLoading } = useQuery({
-    queryKey: ['user-posts', profileData?.data?.data?._id],
-    queryFn: () => postAPI.getUserPosts(profileData?.data?.data?._id),
-    enabled: !!profileData?.data?.data?._id && activeTab === 'posts',
+    queryKey: ['user-posts', profile?._id],
+    queryFn: () => postAPI.getUserPosts(profile._id),
+    enabled: !!profile?._id && activeTab === 'posts',
   });
 
-  const profile = profileData?.data?.data;
   const posts = postsData?.data?.data || [];
   const isOwnProfile = currentUser?._id === profile?._id;
   const isFollowing = profile?.followers?.includes(currentUser?._id);
@@ -35,10 +39,10 @@ const ProfilePage = () => {
     mutationFn: () => isFollowing ? userAPI.unfollowUser(profile._id) : userAPI.followUser(profile._id),
     onSuccess: () => {
       queryClient.invalidateQueries(['profile', username]);
-      toast.success(isFollowing ? 'Unfollowed' : 'Following');
+      notify.success(isFollowing ? 'Unfollowed' : 'Following');
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || 'Failed to update follow status');
+      notify.error(error.response?.data?.message || 'Failed to update follow status');
     },
   });
 
@@ -67,7 +71,7 @@ const ProfilePage = () => {
           <img
             src={getAvatarUrl(profile)}
             alt={profile.username}
-            className="w-32 h-32 rounded-full border-4 border-nebula-purple mx-auto md:mx-0"
+            className="w-32 h-32 rounded-full border-4 border-nebula-purple/70 mx-auto md:mx-0"
           />
 
           {/* Profile Info */}
@@ -81,7 +85,10 @@ const ProfilePage = () => {
               {/* Action Buttons */}
               <div className="mt-4 md:mt-0">
                 {isOwnProfile ? (
-                  <button className="btn-secondary flex items-center gap-2">
+                  <button 
+                    onClick={() => setShowEditModal(true)}
+                    className="btn-secondary flex items-center gap-2"
+                  >
                     <Settings size={18} />
                     Edit Profile
                   </button>
@@ -91,7 +98,7 @@ const ProfilePage = () => {
                     disabled={followMutation.isPending}
                     className={`flex items-center gap-2 px-6 py-2 rounded-lg transition-colors ${
                       isFollowing
-                        ? 'bg-space-700 hover:bg-space-600'
+                        ? 'bg-space-700/50 hover:bg-space-600/60'
                         : 'bg-gradient-to-r from-nebula-purple to-nebula-pink hover:opacity-90'
                     }`}
                   >
@@ -147,7 +154,7 @@ const ProfilePage = () => {
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-space-600 mb-6">
+      <div className="border-b border-space-600/30 mb-6">
         <div className="flex gap-8">
           <button
             onClick={() => setActiveTab('posts')}
@@ -223,6 +230,13 @@ const ProfilePage = () => {
           </div>
         </div>
       )}
+
+      {/* Edit Profile Modal */}
+      <EditProfileModal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        profile={profile}
+      />
     </div>
   );
 };

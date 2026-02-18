@@ -38,7 +38,7 @@ const ExplorePage = () => {
             placeholder="Search posts..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 bg-space-800 border border-space-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-nebula-purple"
+            className="w-full pl-12 pr-4 py-3 bg-space-800/30 backdrop-blur-sm border border-space-600/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-nebula-purple/50"
           />
         </div>
 
@@ -49,7 +49,7 @@ const ExplorePage = () => {
             className={`px-4 py-2 rounded-lg transition-colors ${
               filterTag === '' 
                 ? 'bg-nebula-purple text-white' 
-                : 'bg-space-700 text-gray-300 hover:bg-space-600'
+                : 'bg-space-700/40 text-gray-300 hover:bg-space-600/50'
             }`}
           >
             All
@@ -61,7 +61,7 @@ const ExplorePage = () => {
               className={`px-4 py-2 rounded-lg transition-colors ${
                 filterTag === tag 
                   ? 'bg-nebula-purple text-white' 
-                  : 'bg-space-700 text-gray-300 hover:bg-space-600'
+                  : 'bg-space-700/40 text-gray-300 hover:bg-space-600/50'
               }`}
             >
               #{tag}

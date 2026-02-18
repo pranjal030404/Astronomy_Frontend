@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Home, Compass, Users, Calendar, ShoppingBag, Shield, User, Settings, LogOut, Menu, X, Search } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Home, Compass, Users, Calendar, ShoppingBag, Shield, User, Settings, LogOut, Menu, X, Search, Bell } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 import { getAvatarUrl } from '../../utils/helpers';
 import Logo from '../common/Logo';
@@ -9,6 +9,7 @@ const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user, isAuthenticated, logout } = useAuthStore();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = async () => {
     await logout();
@@ -23,164 +24,164 @@ const Navbar = () => {
     { to: '/shop', icon: ShoppingBag, label: 'Shop' },
   ];
 
+  const isActive = (path) =>
+    path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
+
   if (!isAuthenticated) {
     return null;
   }
 
   return (
-    <nav className="bg-space-800 border-b border-space-600 sticky top-0 z-50 backdrop-blur-lg bg-opacity-95">
+    <nav className="bg-black/40 border-b border-white/10 sticky top-0 z-50 backdrop-blur-2xl">
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center h-14 gap-4">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
-            <Logo size="md" />
-            <span className="text-2xl font-display font-bold text-gradient">
+          <Link to="/" className="flex items-center gap-2 flex-shrink-0">
+            <Logo size="sm" />
+            <span className="text-lg font-display font-bold text-gradient hidden sm:block">
               Astronomy Lover
             </span>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-1">
+          <div className="hidden md:flex items-center gap-1 flex-shrink-0">
             {navLinks.map((link) => (
               <Link
                 key={link.to}
                 to={link.to}
-                className="flex items-center space-x-2 px-4 py-2 rounded-lg hover:bg-space-700 transition-colors"
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                  isActive(link.to)
+                    ? 'text-white bg-nebula-purple/25 border border-nebula-purple/30'
+                    : 'text-gray-300 hover:text-white hover:bg-white/10'
+                }`}
               >
-                <link.icon size={20} />
+                <link.icon size={16} />
                 <span>{link.label}</span>
               </Link>
             ))}
           </div>
 
-          {/* Search Bar (Desktop) */}
-          <div className="hidden md:flex items-center flex-1 max-w-md mx-8">
+          {/* Search Bar */}
+          <div className="flex items-center flex-1 max-w-sm mx-2 hidden md:flex">
             <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
               <input
                 type="text"
                 placeholder="Search posts, users, communities..."
-                className="w-full pl-10 pr-4 py-2 bg-space-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-nebula-purple text-sm"
+                className="w-full pl-9 pr-4 py-1.5 bg-white/8 backdrop-blur-sm rounded-lg focus:outline-none focus:ring-1 focus:ring-nebula-purple/50 text-sm border border-white/10 text-gray-200 placeholder-gray-500"
               />
             </div>
           </div>
 
-          {/* User Menu (Desktop) */}
-          <div className="hidden md:flex items-center space-x-4">
+          {/* Spacer */}
+          <div className="flex-1" />
+
+          {/* Right icons */}
+          <div className="hidden md:flex items-center gap-1">
             {user?.role === 'admin' && (
               <Link
                 to="/admin"
-                className="p-2 hover:bg-space-700 rounded-lg transition-colors"
+                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
                 title="Admin Panel"
               >
-                <Shield size={20} className="text-yellow-400" />
+                <Shield size={18} className="text-yellow-400" />
               </Link>
             )}
-            
-            <Link
-              to={`/profile/${user?.username}`}
-              className="flex items-center space-x-2 hover:bg-space-700 px-3 py-2 rounded-lg transition-colors"
-            >
-              <img
-                src={getAvatarUrl(user)}
-                alt={user?.username}
-                className="w-8 h-8 rounded-full border-2 border-nebula-purple"
-              />
-              <span className="font-medium">{user?.username}</span>
-            </Link>
-            
+
             <Link
               to="/settings"
-              className="p-2 hover:bg-space-700 rounded-lg transition-colors"
+              className="p-2 hover:bg-white/10 rounded-lg transition-colors text-gray-400 hover:text-white"
               title="Settings"
             >
-              <Settings size={20} />
+              <Settings size={18} />
             </Link>
 
             <button
               onClick={handleLogout}
-              className="p-2 hover:bg-space-700 rounded-lg transition-colors text-red-400"
+              className="p-2 hover:bg-white/10 rounded-lg transition-colors text-gray-400 hover:text-red-400"
               title="Logout"
             >
-              <LogOut size={20} />
+              <LogOut size={18} />
             </button>
+
+            <Link
+              to={`/profile/${user?.username}`}
+              className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-white/10 transition-colors ml-1"
+            >
+              <img
+                src={getAvatarUrl(user)}
+                alt={user?.username}
+                className="w-7 h-7 rounded-full border border-nebula-purple/60 object-cover"
+              />
+              <span className="text-sm font-medium text-gray-200">{user?.username}</span>
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden p-2 hover:bg-space-700 rounded-lg"
+            className="md:hidden p-2 hover:bg-white/10 rounded-lg"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
-            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            {isMobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
-          <div className="md:hidden py-4 border-t border-space-600">
-            {/* Search Bar (Mobile) */}
-            <div className="mb-4">
+          <div className="md:hidden py-3 border-t border-white/10">
+            <div className="mb-3">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
                 <input
                   type="text"
                   placeholder="Search..."
-                  className="w-full pl-10 pr-4 py-2 bg-space-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-nebula-purple text-sm"
+                  className="w-full pl-9 pr-4 py-2 bg-white/8 backdrop-blur-sm rounded-lg focus:outline-none focus:ring-1 focus:ring-nebula-purple/50 text-sm border border-white/10"
                 />
               </div>
             </div>
-
-            {/* Navigation Links */}
-            <div className="space-y-2">
+            <div className="space-y-1">
               {navLinks.map((link) => (
                 <Link
                   key={link.to}
                   to={link.to}
-                  className="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-space-700 transition-colors"
+                  className="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-white/10 transition-colors text-sm"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  <link.icon size={20} />
+                  <link.icon size={18} />
                   <span>{link.label}</span>
                 </Link>
               ))}
-              
               {user?.role === 'admin' && (
                 <Link
                   to="/admin"
-                  className="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-space-700 transition-colors"
+                  className="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-white/10 transition-colors text-sm"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  <Shield size={20} className="text-yellow-400" />
+                  <Shield size={18} className="text-yellow-400" />
                   <span>Admin Panel</span>
                 </Link>
               )}
-              
               <Link
                 to={`/profile/${user?.username}`}
-                className="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-space-700 transition-colors"
+                className="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-white/10 transition-colors text-sm"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                <User size={20} />
+                <User size={18} />
                 <span>Profile</span>
               </Link>
-
               <Link
                 to="/settings"
-                className="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-space-700 transition-colors"
+                className="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-white/10 transition-colors text-sm"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                <Settings size={20} />
+                <Settings size={18} />
                 <span>Settings</span>
               </Link>
-
               <button
-                onClick={() => {
-                  handleLogout();
-                  setIsMobileMenuOpen(false);
-                }}
-                className="flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-space-700 transition-colors text-red-400 w-full"
+                onClick={() => { handleLogout(); setIsMobileMenuOpen(false); }}
+                className="flex items-center gap-3 px-4 py-2.5 rounded-lg hover:bg-white/10 transition-colors text-red-400 w-full text-sm"
               >
-                <LogOut size={20} />
+                <LogOut size={18} />
                 <span>Logout</span>
               </button>
             </div>

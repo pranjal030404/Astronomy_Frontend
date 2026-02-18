@@ -102,9 +102,12 @@ const useAuthStore = create(
             isLoading: false,
             error: null,
           });
+          return { success: true };
         } catch (error) {
-          console.error('Fetch user error:', error);
+          console.error('authStore: Fetch user failed:', error.response?.status);
           get().clearAuth();
+          set({ isLoading: false });
+          return { success: false };
         }
       },
 
@@ -146,6 +149,19 @@ const useAuthStore = create(
         token: state.token,
         isAuthenticated: state.isAuthenticated,
       }),
+      onRehydrateStorage: () => (state) => {
+        // After rehydration, verify the token still exists in localStorage
+        if (state) {
+          const token = localStorage.getItem('token');
+          if (!token && state.isAuthenticated) {
+            // Token is missing but state says authenticated - clear state
+            console.log('authStore: Token missing after rehydration, clearing auth');
+            state.isAuthenticated = false;
+            state.user = null;
+            state.token = null;
+          }
+        }
+      },
     }
   )
 );

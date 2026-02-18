@@ -38,6 +38,7 @@ Thumbs.db
 # Uploads
 server/uploads/
 server/temp/
+public/uploads/
 
 # MongoDB
 data/

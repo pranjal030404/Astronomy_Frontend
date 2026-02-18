@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { toast } from 'react-toastify';
+import { useNotification } from '../../context/NotificationContext';
 import { User, Mail, Lock, Eye, EyeOff, Loader } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
 
@@ -16,6 +16,7 @@ const RegisterPage = () => {
   
   const { register, isLoading } = useAuthStore();
   const navigate = useNavigate();
+  const notify = useNotification();
 
   const handleChange = (e) => {
     setFormData({
@@ -29,19 +30,19 @@ const RegisterPage = () => {
 
     // Validate passwords match
     if (formData.password !== formData.confirmPassword) {
-      toast.error('Passwords do not match');
+      notify.error('Passwords do not match');
       return;
     }
 
     // Validate password length
     if (formData.password.length < 6) {
-      toast.error('Password must be at least 6 characters');
+      notify.error('Password must be at least 6 characters');
       return;
     }
 
     // Validate username
     if (formData.username.length < 3) {
-      toast.error('Username must be at least 3 characters');
+      notify.error('Username must be at least 3 characters');
       return;
     }
 
@@ -52,10 +53,10 @@ const RegisterPage = () => {
     });
     
     if (result.success) {
-      toast.success('Welcome to Astronomy Lover! 🌌✨');
+      notify.success('Welcome to Astronomy Lover! 🌌✨');
       navigate('/');
     } else {
-      toast.error(result.message || 'Registration failed. Please try again.');
+      notify.error(result.message || 'Registration failed. Please try again.');
     }
   };
 
@@ -224,7 +225,7 @@ const RegisterPage = () => {
               <div className="w-full border-t border-space-600"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-space-800 text-gray-400">
+              <span className="px-2 bg-space-800/50 text-gray-400">
                 Already have an account?
               </span>
             </div>

@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { Upload, X, Info } from 'lucide-react';
-import { toast } from 'react-toastify';
+import { useNotification } from '../context/NotificationContext';
 import { communityAPI } from '../services/api';
 
 const CreateCommunityPage = () => {
   const navigate = useNavigate();
+  const notify = useNotification();
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -36,11 +37,11 @@ const CreateCommunityPage = () => {
   const createCommunityMutation = useMutation({
     mutationFn: (data) => communityAPI.createCommunity(data),
     onSuccess: (response) => {
-      toast.success('Community created successfully!');
+      notify.success('Community created successfully!');
       navigate(`/communities/${response.data.data.slug}`);
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || 'Failed to create community');
+      notify.error(error.response?.data?.message || 'Failed to create community');
     },
   });
 
@@ -56,7 +57,7 @@ const CreateCommunityPage = () => {
     const file = e.target.files[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        toast.error('Image must be less than 5MB');
+        notify.error('Image must be less than 5MB');
         return;
       }
       setCoverImage(file);
@@ -86,12 +87,12 @@ const CreateCommunityPage = () => {
     e.preventDefault();
 
     if (!formData.name.trim()) {
-      toast.error('Please enter a community name');
+      notify.error('Please enter a community name');
       return;
     }
 
     if (!formData.description.trim()) {
-      toast.error('Please add a description');
+      notify.error('Please add a description');
       return;
     }
 
@@ -235,7 +236,7 @@ const CreateCommunityPage = () => {
                 </button>
               </div>
             ) : (
-              <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-space-600 rounded-lg cursor-pointer hover:border-nebula-purple transition-colors">
+              <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-space-600/40 rounded-lg cursor-pointer hover:border-nebula-purple/50 transition-colors">
                 <Upload className="text-gray-400 mb-2" size={40} />
                 <span className="text-sm text-gray-400">Click to upload cover image</span>
                 <span className="text-xs text-gray-500 mt-1">JPG, PNG (max 5MB)</span>
@@ -258,7 +259,7 @@ const CreateCommunityPage = () => {
             <div>
               <label className="block text-sm font-medium mb-3">Community Type</label>
               <div className="space-y-3">
-                <label className="flex items-start gap-3 p-4 border border-space-600 rounded-lg cursor-pointer hover:border-nebula-purple transition-colors">
+                <label className="flex items-start gap-3 p-4 border border-space-600/30 rounded-lg cursor-pointer hover:border-nebula-purple/50 transition-colors">
                   <input
                     type="radio"
                     name="privacy"
@@ -275,7 +276,7 @@ const CreateCommunityPage = () => {
                   </div>
                 </label>
 
-                <label className="flex items-start gap-3 p-4 border border-space-600 rounded-lg cursor-pointer hover:border-nebula-purple transition-colors">
+                <label className="flex items-start gap-3 p-4 border border-space-600/30 rounded-lg cursor-pointer hover:border-nebula-purple/50 transition-colors">
                   <input
                     type="radio"
                     name="privacy"
@@ -328,7 +329,7 @@ const CreateCommunityPage = () => {
 
           <div className="space-y-4">
             {formData.rules.map((rule, index) => (
-              <div key={index} className="p-4 bg-space-700 rounded-lg">
+              <div key={index} className="p-4 bg-space-700/30 rounded-lg">
                 <div className="flex justify-between items-start mb-3">
                   <span className="text-sm font-medium text-gray-400">
                     Rule {index + 1}

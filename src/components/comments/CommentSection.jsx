@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { commentAPI } from '../../services/api';
-import { toast } from 'react-toastify';
+import { useNotification } from '../../context/NotificationContext';
 import { Loader, Send } from 'lucide-react';
 import CommentItem from './CommentItem';
 import useAuthStore from '../../store/authStore';
@@ -11,6 +11,7 @@ const CommentSection = ({ postId }) => {
   const [newComment, setNewComment] = useState('');
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
+  const notify = useNotification();
 
   const { data: commentsData, isLoading } = useQuery({
     queryKey: ['comments', postId],
@@ -20,13 +21,13 @@ const CommentSection = ({ postId }) => {
   const createCommentMutation = useMutation({
     mutationFn: (content) => commentAPI.createComment(postId, { content }),
     onSuccess: () => {
-      toast.success('Comment added');
+      notify.success('Comment added');
       setNewComment('');
       queryClient.invalidateQueries(['comments', postId]);
       queryClient.invalidateQueries(['posts', postId]);
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || 'Failed to add comment');
+      notify.error(error.response?.data?.message || 'Failed to add comment');
     },
   });
 
@@ -46,7 +47,7 @@ const CommentSection = ({ postId }) => {
         <img
           src={getAvatarUrl(user)}
           alt={user?.username}
-          className="w-10 h-10 rounded-full border-2 border-nebula-purple flex-shrink-0"
+          className="w-10 h-10 rounded-full border-2 border-nebula-purple/70 flex-shrink-0"
         />
         <div className="flex-1 flex gap-2">
           <input

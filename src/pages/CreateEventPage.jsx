@@ -2,11 +2,14 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { Calendar, AlertCircle, Plus, X } from 'lucide-react';
-import { toast } from 'react-toastify';
+import { useNotification } from '../context/NotificationContext';
 import { eventAPI } from '../services/api';
+import useAuthStore from '../store/authStore';
 
 const CreateEventPage = () => {
   const navigate = useNavigate();
+  const notify = useNotification();
+  const { user } = useAuthStore();
   const [formData, setFormData] = useState({
     name: '',
     type: 'Meteor Shower',
@@ -46,12 +49,15 @@ const CreateEventPage = () => {
 
   const createEventMutation = useMutation({
     mutationFn: (data) => eventAPI.createEvent(data),
-    onSuccess: () => {
-      toast.success('Event created! It will appear on the calendar.');
+    onSuccess: (response) => {
+      const message = user?.role === 'admin' 
+        ? 'Event created and approved! It\'s now visible on the calendar. 🌟'
+        : 'Event submitted for approval! You\'ll be notified once it\'s reviewed. 📝';
+      notify.success(message);
       navigate('/calendar');
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || 'Failed to create event');
+      notify.error(error.response?.data?.message || 'Failed to create event');
     },
   });
 
@@ -85,17 +91,17 @@ const CreateEventPage = () => {
     e.preventDefault();
 
     if (!formData.name.trim()) {
-      toast.error('Please enter an event name');
+      notify.error('Please enter an event name');
       return;
     }
 
     if (!formData.startDate) {
-      toast.error('Please set a start date');
+      notify.error('Please set a start date');
       return;
     }
 
     if (!formData.description.trim()) {
-      toast.error('Please add a description');
+      notify.error('Please add a description');
       return;
     }
 
@@ -355,7 +361,7 @@ const CreateEventPage = () => {
                   <button
                     type="button"
                     onClick={() => removeTip(index)}
-                    className="p-2 hover:bg-space-700 rounded transition-colors"
+                    className="p-2 hover:bg-space-700/50 rounded transition-colors"
                   >
                     <X size={20} className="text-red-400" />
                   </button>
@@ -397,13 +403,14 @@ const CreateEventPage = () => {
         </div>
 
         {/* Info Box */}
-        <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 flex gap-3">
+        <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4 flex gap-3 backdrop-blur-sm">
           <AlertCircle className="text-blue-400 flex-shrink-0 mt-0.5" size={20} />
           <div className="text-sm text-blue-200">
-            <p className="font-medium mb-1">Event Verification</p>
+            <p className="font-medium mb-1">Event Submission</p>
             <p>
-              Events are typically reviewed before appearing publicly. Make sure your information 
-              is accurate and sourced from reliable astronomy organizations.
+              {user?.role === 'admin' 
+                ? 'As an admin, your events will be automatically approved and visible immediately.' 
+                : 'Your event will be submitted for admin review. It will appear on the calendar once approved.'}
             </p>
           </div>
         </div>

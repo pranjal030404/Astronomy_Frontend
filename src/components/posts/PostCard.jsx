@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Heart, MessageCircle, Share2, MoreVertical, Star } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Heart, MessageCircle, Share2, MoreVertical, Star, Trash2, User, Edit } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { postAPI } from '../../services/api';
-import { toast } from 'react-toastify';
+import { useNotification } from '../../context/NotificationContext';
+import ConfirmModal from '../common/ConfirmModal';
+import EditPostModal from './EditPostModal';
 import { formatDistanceToNow } from 'date-fns';
 import useAuthStore from '../../store/authStore';
 import { getAvatarUrl } from '../../utils/helpers';
@@ -11,12 +13,32 @@ import { getAvatarUrl } from '../../utils/helpers';
 const PostCard = ({ post }) => {
   const [showFullContent, setShowFullContent] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [showMenu, setShowMenu] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const menuRef = useRef(null);
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const notify = useNotification();
 
   const isLiked = post.likes?.includes(user?._id);
   const likeCount = post.likes?.length || 0;
   const commentCount = post.comments?.length || 0;
+  const isOwnPost = user?._id === post.author?._id;
+  const isAdmin = user?.role === 'admin';
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setShowMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const likeMutation = useMutation({
     mutationFn: () => isLiked ? postAPI.unlikePost(post._id) : postAPI.likePost(post._id),
@@ -25,12 +47,44 @@ const PostCard = ({ post }) => {
       queryClient.invalidateQueries(['feed']);
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || 'Failed to like post');
+      notify.error(error.response?.data?.message || 'Failed to like post');
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => postAPI.deletePost(post._id),
+    onSuccess: () => {
+      notify.success('Post deleted successfully!');
+      queryClient.invalidateQueries(['posts']);
+      queryClient.invalidateQueries(['feed']);
+      setShowMenu(false);
+    },
+    onError: (error) => {
+      notify.error(error.response?.data?.message || 'Failed to delete post');
     },
   });
 
   const handleLike = () => {
+    if (!user) {
+      notify.error('Please log in to like posts');
+      navigate('/login');
+      return;
+    }
     likeMutation.mutate();
+  };
+
+  const handleDelete = () => {
+    setShowDeleteConfirm(true);
+    setShowMenu(false);
+  };
+
+  const confirmDelete = () => {
+    deleteMutation.mutate();
+  };
+
+  const handleViewProfile = () => {
+    navigate(`/profile/${post.author?.username}`);
+    setShowMenu(false);
   };
 
   const nextImage = () => {
@@ -56,7 +110,7 @@ const PostCard = ({ post }) => {
           <img
             src={getAvatarUrl(post.author)}
             alt={post.author?.username}
-            className="w-10 h-10 rounded-full border-2 border-nebula-purple"
+            className="w-10 h-10 rounded-full border-2 border-nebula-purple/70"
           />
           <div>
             <p className="font-semibold">{post.author?.username}</p>
@@ -66,9 +120,53 @@ const PostCard = ({ post }) => {
           </div>
         </Link>
 
-        <button className="p-2 hover:bg-space-700 rounded-lg transition-colors">
-          <MoreVertical size={20} />
-        </button>
+        <div className="relative" ref={menuRef}>
+          <button 
+            onClick={() => setShowMenu(!showMenu)}
+            className="p-2 hover:bg-space-700/50 rounded-lg transition-colors"
+          >
+            <MoreVertical size={20} />
+          </button>
+
+          {/* Dropdown Menu */}
+          {showMenu && (
+            <div className="absolute right-0 top-full mt-2 w-48 bg-space-800/80 backdrop-blur-xl border border-space-600/30 rounded-lg shadow-xl z-50">
+              <div className="py-1">
+                <button
+                  onClick={handleViewProfile}
+                  className="w-full px-4 py-2 text-left text-sm hover:bg-space-700/50 transition-colors flex items-center gap-2"
+                >
+                  <User size={16} />
+                  View Profile
+                </button>
+
+                {(isOwnPost || isAdmin) && (
+                  <>
+                    <button
+                      onClick={() => {
+                        setShowEditModal(true);
+                        setShowMenu(false);
+                      }}
+                      className="w-full px-4 py-2 text-left text-sm hover:bg-space-700/50 transition-colors flex items-center gap-2"
+                    >
+                      <Edit size={16} />
+                      Edit Post
+                    </button>
+
+                    <button
+                      onClick={handleDelete}
+                      disabled={deleteMutation.isPending}
+                      className="w-full px-4 py-2 text-left text-sm hover:bg-red-900/50 text-red-400 transition-colors flex items-center gap-2"
+                    >
+                      <Trash2 size={16} />
+                      {deleteMutation.isPending ? 'Deleting...' : 'Delete Post'}
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Content */}
@@ -124,7 +222,7 @@ const PostCard = ({ post }) => {
 
       {/* Astronomy Data */}
       {post.astronomyData?.objectName && (
-        <div className="mb-4 p-3 bg-space-700 rounded-lg border border-space-600">
+        <div className="mb-4 p-3 bg-space-700/30 rounded-lg border border-space-600/30">
           <div className="flex items-start gap-2">
             <Star size={18} className="text-nebula-purple mt-0.5" />
             <div className="flex-1">
@@ -154,7 +252,7 @@ const PostCard = ({ post }) => {
           {post.tags.map((tag, index) => (
             <span
               key={index}
-              className="px-2 py-1 bg-space-700 text-nebula-purple text-xs rounded-full"
+              className="px-2 py-1 bg-space-700/40 text-nebula-purple text-xs rounded-full"
             >
               #{tag}
             </span>
@@ -163,7 +261,7 @@ const PostCard = ({ post }) => {
       )}
 
       {/* Actions */}
-      <div className="flex items-center gap-6 pt-4 border-t border-space-600">
+      <div className="flex items-center gap-6 pt-4 border-t border-space-600/30">
         <button
           onClick={handleLike}
           disabled={likeMutation.isPending}
@@ -187,6 +285,25 @@ const PostCard = ({ post }) => {
           <Share2 size={20} />
         </button>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={confirmDelete}
+        title="Delete Post?"
+        message="Are you sure you want to delete this post? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        type="danger"
+      />
+
+      {/* Edit Post Modal */}
+      <EditPostModal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        post={post}
+      />
     </div>
   );
 };
