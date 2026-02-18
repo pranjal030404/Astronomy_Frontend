@@ -115,7 +115,7 @@ function App() {
       <NotificationProvider>
         <StarField />
         <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-          <div className="flex flex-col min-h-screen text-white">
+          <div className="flex flex-col min-h-screen text-white bg-transparent">
             <Navbar />
             
             <main className="flex-grow">

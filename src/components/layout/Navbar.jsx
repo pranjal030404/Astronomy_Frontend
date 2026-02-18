@@ -32,7 +32,7 @@ const Navbar = () => {
   }
 
   return (
-    <nav className="bg-black/40 border-b border-white/10 sticky top-0 z-50 backdrop-blur-2xl">
+    <nav className="bg-black/25 border-b border-white/10 sticky top-0 z-50 backdrop-blur-2xl">
       <div className="container mx-auto px-4">
         <div className="flex items-center h-14 gap-4">
           {/* Logo */}
