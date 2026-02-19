@@ -69,8 +69,8 @@
       radial-gradient(2px 2px at 90% 60%, white, transparent),
       radial-gradient(1px 1px at 33% 82%, white, transparent),
       radial-gradient(2px 2px at 27% 75%, white, transparent);
-    background-size: 200% 200%;
-    animation: twinkle 3s ease-in-out infinite;
+
+
   }
 
   /* Glass morphism effect */

@@ -40,7 +40,7 @@ const LoginPage = () => {
       <div className="max-w-md w-full">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="text-6xl mb-4 animate-float">🌌</div>
+          <div className="text-6xl mb-4">🌌</div>
           <h1 className="text-4xl font-display font-bold text-gradient mb-2">
             Welcome Back
           </h1>
