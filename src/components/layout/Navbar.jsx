@@ -1,15 +1,55 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Home, Compass, Users, Calendar, ShoppingBag, Shield, User, Settings, LogOut, Menu, X, Search, Bell } from 'lucide-react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import useAuthStore from '../../store/authStore';
 import { getAvatarUrl } from '../../utils/helpers';
 import Logo from '../common/Logo';
+import { notificationAPI } from '../../services/api';
+import { formatDistanceToNow } from 'date-fns';
 
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const notifRef = useRef(null);
   const { user, isAuthenticated, logout } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
+  const queryClient = useQueryClient();
+
+  const { data: notificationsData } = useQuery({
+    queryKey: ['notifications'],
+    queryFn: () => notificationAPI.getNotifications(),
+    select: (res) => res.data?.data || [],
+    enabled: isAuthenticated,
+    refetchInterval: 30000, // poll every 30s
+  });
+
+  const notifications = notificationsData || [];
+  const unreadCount = notifications.filter((n) => !n.read).length;
+
+  const markAllReadMutation = useMutation({
+    mutationFn: () => notificationAPI.markAllRead(),
+    onSuccess: () => queryClient.invalidateQueries(['notifications']),
+  });
+
+  const handleOpenNotifications = () => {
+    setShowNotifications((prev) => !prev);
+    if (!showNotifications && unreadCount > 0) {
+      markAllReadMutation.mutate();
+    }
+  };
+
+  // Close notification panel when clicking outside
+  useEffect(() => {
+    const handleClick = (e) => {
+      if (notifRef.current && !notifRef.current.contains(e.target)) {
+        setShowNotifications(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, []);
 
   const handleLogout = async () => {
     await logout();
@@ -87,6 +127,68 @@ const Navbar = () => {
                 <Shield size={18} className="text-yellow-400" />
               </Link>
             )}
+
+            {/* Notifications Bell */}
+            <div className="relative" ref={notifRef}>
+              <button
+                onClick={handleOpenNotifications}
+                className="relative p-2 hover:bg-white/10 rounded-lg transition-colors text-gray-400 hover:text-white"
+                title="Notifications"
+              >
+                <Bell size={18} />
+                {unreadCount > 0 && (
+                  <span className="absolute top-1 right-1 w-4 h-4 bg-nebula-purple rounded-full text-[10px] font-bold flex items-center justify-center text-white">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </button>
+
+              {showNotifications && (
+                <div className="absolute right-0 top-full mt-2 w-80 bg-space-800/95 backdrop-blur-xl border border-space-600/30 rounded-xl shadow-2xl z-50 overflow-hidden">
+                  <div className="px-4 py-3 border-b border-space-600/30 flex items-center justify-between">
+                    <h3 className="font-semibold text-sm">Notifications</h3>
+                    {unreadCount > 0 && (
+                      <span className="text-xs text-nebula-purple">{unreadCount} unread</span>
+                    )}
+                  </div>
+                  <div className="max-h-80 overflow-y-auto">
+                    {notifications.length === 0 ? (
+                      <div className="py-8 text-center text-sm text-gray-500">No notifications yet</div>
+                    ) : (
+                      notifications.map((n) => (
+                        <Link
+                          key={n._id}
+                          to={n.post ? `/posts/${n.post._id}` : '/'}
+                          onClick={() => setShowNotifications(false)}
+                          className={`flex items-start gap-3 px-4 py-3 hover:bg-space-700/50 transition-colors border-b border-space-600/20 last:border-0 ${
+                            !n.read ? 'bg-nebula-purple/5' : ''
+                          }`}
+                        >
+                          <img
+                            src={getAvatarUrl(n.sender)}
+                            alt={n.sender?.username}
+                            className="w-8 h-8 rounded-full border border-nebula-purple/40 flex-shrink-0 mt-0.5"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm">
+                              <span className="font-semibold">@{n.sender?.username}</span>
+                              {' '}shared a post with you
+                            </p>
+                            {n.post?.content && (
+                              <p className="text-xs text-gray-400 truncate mt-0.5">{n.post.content}</p>
+                            )}
+                            <p className="text-xs text-gray-500 mt-0.5">
+                              {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true })}
+                            </p>
+                          </div>
+                          {!n.read && <span className="w-2 h-2 bg-nebula-purple rounded-full flex-shrink-0 mt-2" />}
+                        </Link>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
 
             <Link
               to="/settings"

@@ -76,6 +76,7 @@ export const authAPI = {
   getMe: () => API.get('/auth/me'),
   updateProfile: (data) => API.put('/auth/update-details', data),
   updatePassword: (data) => API.put('/auth/update-password', data),
+  checkUsername: (username) => API.get(`/auth/check-username?username=${encodeURIComponent(username)}`),
 };
 
 // User API calls
@@ -105,6 +106,7 @@ export const postAPI = {
   likePost: (postId) => API.post(`/posts/${postId}/like`),
   unlikePost: (postId) => API.delete(`/posts/${postId}/like`),
   getUserPosts: (userId) => API.get(`/posts/user/${userId}`),
+  sharePost: (postId, recipientUsername) => API.post(`/posts/${postId}/share`, { recipientUsername }),
 };
 
 // Comment API calls
@@ -166,6 +168,13 @@ export const eventAPI = {
   getPendingEvents: () => API.get('/events/admin/pending'),
   approveEvent: (eventId) => API.put(`/events/${eventId}/approve`),
   rejectEvent: (eventId, reason) => API.put(`/events/${eventId}/reject`, { reason }),
+};
+
+// Notification API calls
+export const notificationAPI = {
+  getNotifications: () => API.get('/notifications'),
+  markAllRead: () => API.put('/notifications/read'),
+  markRead: (id) => API.put(`/notifications/${id}/read`),
 };
 
 export default API;

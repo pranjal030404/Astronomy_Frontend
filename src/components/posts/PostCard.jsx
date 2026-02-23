@@ -6,6 +6,7 @@ import { postAPI } from '../../services/api';
 import { useNotification } from '../../context/NotificationContext';
 import ConfirmModal from '../common/ConfirmModal';
 import EditPostModal from './EditPostModal';
+import SharePostModal from './SharePostModal';
 import { formatDistanceToNow } from 'date-fns';
 import useAuthStore from '../../store/authStore';
 import { getAvatarUrl } from '../../utils/helpers';
@@ -16,6 +17,7 @@ const PostCard = ({ post }) => {
   const [showMenu, setShowMenu] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
   const menuRef = useRef(null);
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
@@ -281,7 +283,8 @@ const PostCard = ({ post }) => {
           <span className="text-sm">{commentCount}</span>
         </Link>
 
-        <button className="flex items-center gap-2 text-gray-400 hover:text-nebula-purple transition-colors ml-auto">
+        <button className="flex items-center gap-2 text-gray-400 hover:text-nebula-purple transition-colors ml-auto"
+          onClick={() => setShowShareModal(true)}>
           <Share2 size={20} />
         </button>
       </div>
@@ -302,6 +305,13 @@ const PostCard = ({ post }) => {
       <EditPostModal
         isOpen={showEditModal}
         onClose={() => setShowEditModal(false)}
+        post={post}
+      />
+
+      {/* Share Post Modal */}
+      <SharePostModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
         post={post}
       />
     </div>

@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useNotification } from '../../context/NotificationContext';
-import { User, Mail, Lock, Eye, EyeOff, Loader } from 'lucide-react';
+import { User, Mail, Lock, Eye, EyeOff, Loader, CheckCircle, XCircle } from 'lucide-react';
 import useAuthStore from '../../store/authStore';
+import { authAPI } from '../../services/api';
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -13,10 +14,30 @@ const RegisterPage = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  
+  const [usernameStatus, setUsernameStatus] = useState(null); // null | 'checking' | 'available' | 'taken'
+
   const { register, isLoading } = useAuthStore();
   const navigate = useNavigate();
   const notify = useNotification();
+
+  // Debounced username availability check
+  useEffect(() => {
+    const username = formData.username.trim();
+    if (username.length < 3 || !/^[a-zA-Z0-9_]+$/.test(username)) {
+      setUsernameStatus(null);
+      return;
+    }
+    setUsernameStatus('checking');
+    const timer = setTimeout(async () => {
+      try {
+        const { data } = await authAPI.checkUsername(username);
+        setUsernameStatus(data.available ? 'available' : 'taken');
+      } catch {
+        setUsernameStatus(null);
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [formData.username]);
 
   const handleChange = (e) => {
     setFormData({
@@ -43,6 +64,11 @@ const RegisterPage = () => {
     // Validate username
     if (formData.username.length < 3) {
       notify.error('Username must be at least 3 characters');
+      return;
+    }
+
+    if (usernameStatus === 'taken') {
+      notify.error('That username is already taken. Please choose another.');
       return;
     }
 
@@ -94,12 +120,27 @@ const RegisterPage = () => {
                   minLength={3}
                   maxLength={30}
                   pattern="[a-zA-Z0-9_]+"
-                  className="input-field pl-10"
+                  className={`input-field pl-10 pr-10 ${
+                    usernameStatus === 'taken' ? 'border-red-500/60' :
+                    usernameStatus === 'available' ? 'border-green-500/60' : ''
+                  }`}
                   placeholder="stargazer_42"
                 />
+                {/* Username status icon */}
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  {usernameStatus === 'checking' && <Loader size={18} className="text-gray-400 animate-spin" />}
+                  {usernameStatus === 'available' && <CheckCircle size={18} className="text-green-400" />}
+                  {usernameStatus === 'taken' && <XCircle size={18} className="text-red-400" />}
+                </div>
               </div>
-              <p className="text-xs text-gray-400 mt-1">
-                3-30 characters, letters, numbers, and underscores only
+              <p className={`text-xs mt-1 ${
+                usernameStatus === 'taken' ? 'text-red-400' :
+                usernameStatus === 'available' ? 'text-green-400' :
+                'text-gray-400'
+              }`}>
+                {usernameStatus === 'taken' ? 'Username is already taken' :
+                 usernameStatus === 'available' ? 'Username is available!' :
+                 '3-30 characters, letters, numbers, and underscores only'}
               </p>
             </div>
 
